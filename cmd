@@ -6,7 +6,7 @@ flowcheckhome=$(cd "$(dirname "$0")";pwd)/interface_check
 
 
 #例子：git_url=github.com/OldTT/hitoprotect.git
-git_url=
+git_url=https://github.com/kuaifan/hi-ddos.git
 
 #fonts color
 Green="\033[32m"
