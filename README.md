@@ -12,4 +12,5 @@
 ```
 WEBHOOK_URL="http://127.0.0.1:85/hooks/ipreport"
 
+修改为主控的webhook地址
 ```
