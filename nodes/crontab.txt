@@ -1,0 +1,4 @@
+*/5 * * * * /bin/sh server_a/run.sh
+
+#检测时间是否是每个小时的第一分钟。如果是则清除/root/ddos/blocking.txt内容以及清除本地防火墙的iptables封锁
+* */1 * * * /bin/sh server_a/clean_iptable.sh
