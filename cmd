@@ -1,8 +1,9 @@
 #!/bin/bash
 ddoshome=/root
-flowcheckhome=/root/ddos/interface_check
-nodeshome=/root/ddos/nodes
-masterhome=/root/ddos/master
+nodeshome=$(cd "$(dirname "$0")";pwd)/nodes
+masterhome=$(cd "$(dirname "$0")";pwd)/master
+flowcheckhome=$(cd "$(dirname "$0")";pwd)/interface_check
+
 
 #例子：git_url=github.com/OldTT/hitoprotect.git
 git_url=
@@ -117,17 +118,17 @@ docker run  -itd --name ddos \
 -p 80:80 \
 -p 443:443 \
 --restart=always \
--v /root/ddos:/root/ddos \
+-v $nodeshome:$nodeshome \
 -v /var/run/docker.sock:/var/run/docker.sock  \
 -v /usr/bin/docker:/usr/bin/docker  \
 -v $nodeshome/nginx/:/eth/nginx/  \
 fabiocicerchia/nginx-lua:1.21.1-ubuntu20.04
 docker cp  $nodeshome/nginx.conf ddos:/etc/nginx/nginx.conf
-docker exec -it -u 0 ddos bash -c 'rm -rf /root/ddos/nodes/ngx_waf/assets/ngx_http_waf_module.so && cd  /root/ddos/nodes/ngx_waf/assets/ && sh /root/ddos/nodes/ngx_waf/assets/download.sh 1.21.1 lts && cat /etc/nginx/nginx.conf && nginx -s reload'
+docker exec -it -u 0 ddos bash -c 'rm -rf '$nodeshome'/nodes/ngx_waf/assets/ngx_http_waf_module.so && cd '$nodeshome'/ngx_waf/assets/ && sh'$nodeshome'/ngx_waf/assets/download.sh 1.21.1 lts && cat /etc/nginx/nginx.conf && nginx -s reload'
 if [[ "${ID}" == "ubuntu" ]] ||  [[ "${ID}" == "debian" ]];then
-        echo "*/1 * * * * /root/ddos/nodes/check.sh >> /root/ddos/nodes/logs/cron" >> /var/spool/cron/crontabs/root  
+        echo "*/1 * * * * $nodeshome/check.sh >> $nodeshome/logs/cron" >> /var/spool/cron/crontabs/root  
     elif [[ "${ID}" == "centos" ]];then
-        echo "*/1 * * * * /root/ddos/nodes/check.sh >> /root/ddos/nodes/logs/cron" >> /var/spool/cron/root 
+        echo "*/1 * * * * $nodeshome/check.sh >> $nodeshome/logs/cron" >> /var/spool/cron/root 
     else
         echo -e "${Error} ${RedBG} 当前系统为 ${ID} ${VERSION_ID} 不在支持的系统列表内，安装中断 ${Font}"
         exit 1
@@ -153,7 +154,7 @@ if [[ "${ID}" == "ubuntu" ]] ||  [[ "${ID}" == "debian" ]];then
         #处理nodes提交的ip，默认每5分钟执行一次
         echo "*/5 * * * * /bin/sh /$masterhome/run.sh" >>/var/spool/cron/crontabs/root 
         #自动检查到期解封，默认每分钟执行一次
-        echo "*/1 * * * * /bin/sh $masterhome/auto_release.sh" >>/var/spool/cron/crontabs/root 
+        echo "*/1 * * * * /bin/sh $masterhome/auto_release.sh" >>/var/spool/cron/crontabs/root
     elif [[ "${ID}" == "centos" ]];then
         #处理nodes提交的ip，默认每5分钟执行一次    
         echo "*/5 * * * * /bin/sh /$masterhome/run.sh" >>/var/spool/cron/root
@@ -168,7 +169,7 @@ fi
 /bin/bash $masterhome/import_exist_blocked_ip_from_api.sh
 chmod 777 $ddoshome/ddos/webhook
 nohup $ddoshome/ddos/webhook/webhook -port $webhookport -hotreload -hooks $masterhome/hooks/hooks.json -verbose &
-echo "webhook程序已启动"
+judge "webhook程序启动"
 }
 
 
@@ -233,4 +234,3 @@ show_menu() {
 }
 
 show_menu
-
