@@ -126,7 +126,7 @@ docker cp  $nodeshome/nginx.conf ddos:/etc/nginx/nginx.conf
 docker exec -it -u 0 ddos bash -c 'rm -rf /root/ddos/nodes/ngx_waf/assets/ngx_http_waf_module.so && cd  /root/ddos/nodes/ngx_waf/assets/ && sh /root/ddos/nodes/ngx_waf/assets/download.sh 1.21.1 lts && cat /etc/nginx/nginx.conf && nginx -s reload'
 if [[ "${ID}" == "ubuntu" ]] ||  [[ "${ID}" == "debian" ]];then
         echo "*/1 * * * * /root/ddos/nodes/check.sh >> /root/ddos/nodes/logs/cron" >> /var/spool/cron/crontabs/root  
-    elif [[ "${ID}" == "centos" ]];
+    elif [[ "${ID}" == "centos" ]];then
         echo "*/1 * * * * /root/ddos/nodes/check.sh >> /root/ddos/nodes/logs/cron" >> /var/spool/cron/root 
     else
         echo -e "${Error} ${RedBG} 当前系统为 ${ID} ${VERSION_ID} 不在支持的系统列表内，安装中断 ${Font}"
@@ -154,7 +154,7 @@ if [[ "${ID}" == "ubuntu" ]] ||  [[ "${ID}" == "debian" ]];then
         echo "*/5 * * * * /bin/sh /$masterhome/run.sh" >>/var/spool/cron/crontabs/root 
         #自动检查到期解封，默认每分钟执行一次
         echo "*/1 * * * * /bin/sh $masterhome/auto_release.sh" >>/var/spool/cron/crontabs/root 
-    elif [[ "${ID}" == "centos" ]];
+    elif [[ "${ID}" == "centos" ]];then
         #处理nodes提交的ip，默认每5分钟执行一次    
         echo "*/5 * * * * /bin/sh /$masterhome/run.sh" >>/var/spool/cron/root
         #自动检查到期解封，默认每分钟执行一次
@@ -187,7 +187,7 @@ $flowcheckhome/check_interface.sh
 if [[ "${ID}" == "ubuntu" ]] ||  [[ "${ID}" == "debian" ]];then
         echo "*/1 * * * * $flowcheckhome/check_interface.sh" >>/var/spool/cron/crontabs/root 
         systemctl restart crond.service
-    elif [[ "${ID}" == "centos" ]];
+    elif [[ "${ID}" == "centos" ]];then
         echo "*/1 * * * * $flowcheckhome/check_interface.sh" >>/var/spool/cron/root
         systemctl restart crond.service
     else
