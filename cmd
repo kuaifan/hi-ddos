@@ -125,12 +125,12 @@ fabiocicerchia/nginx-lua:1.21.1-ubuntu20.04
 docker cp  $nodeshome/nginx.conf ddos:/etc/nginx/nginx.conf
 docker exec -it -u 0 ddos bash -c 'rm -rf /root/ddos/nodes/ngx_waf/assets/ngx_http_waf_module.so && cd  /root/ddos/nodes/ngx_waf/assets/ && sh /root/ddos/nodes/ngx_waf/assets/download.sh 1.21.1 lts && cat /etc/nginx/nginx.conf && nginx -s reload'
 if [[ "${ID}" == "ubuntu" ]] ||  [[ "${ID}" == "debian" ]];then
-    echo "*/1 * * * * /root/ddos/nodes/check.sh >> /root/ddos/nodes/logs/cron" >> /var/spool/cron/crontabs/root  
-elif [[ "${ID}" == "centos" ]];
-    echo "*/1 * * * * /root/ddos/nodes/check.sh >> /root/ddos/nodes/logs/cron" >> /var/spool/cron/root 
-else
-    echo -e "${Error} ${RedBG} 当前系统为 ${ID} ${VERSION_ID} 不在支持的系统列表内，安装中断 ${Font}"
-    exit 1
+        echo "*/1 * * * * /root/ddos/nodes/check.sh >> /root/ddos/nodes/logs/cron" >> /var/spool/cron/crontabs/root  
+    elif [[ "${ID}" == "centos" ]];
+        echo "*/1 * * * * /root/ddos/nodes/check.sh >> /root/ddos/nodes/logs/cron" >> /var/spool/cron/root 
+    else
+        echo -e "${Error} ${RedBG} 当前系统为 ${ID} ${VERSION_ID} 不在支持的系统列表内，安装中断 ${Font}"
+        exit 1
 fi
 systemctl enable cron 
 systemctl restart cron 
@@ -150,18 +150,18 @@ chmod +X $masterhome/import_exist_blocked_ip_from_api.sh
 chmod +X $masterhome/hooks/*.sh
 
 if [[ "${ID}" == "ubuntu" ]] ||  [[ "${ID}" == "debian" ]];then
-    #处理nodes提交的ip，默认每5分钟执行一次
-    echo "*/5 * * * * /bin/sh /$masterhome/run.sh" >>/var/spool/cron/crontabs/root 
-    #自动检查到期解封，默认每分钟执行一次
-    echo "*/1 * * * * /bin/sh $masterhome/auto_release.sh" >>/var/spool/cron/crontabs/root 
-elif [[ "${ID}" == "centos" ]];
-    #处理nodes提交的ip，默认每5分钟执行一次    
-    echo "*/5 * * * * /bin/sh /$masterhome/run.sh" >>/var/spool/cron/root
-    #自动检查到期解封，默认每分钟执行一次
-    echo "*/1 * * * * /bin/sh $masterhome/auto_release.sh" >>/var/spool/cron/root
-else
-     echo -e "${Error} ${RedBG} 当前系统为 ${ID} ${VERSION_ID} 不在支持的系统列表内，安装中断 ${Font}"
-     exit 1
+        #处理nodes提交的ip，默认每5分钟执行一次
+        echo "*/5 * * * * /bin/sh /$masterhome/run.sh" >>/var/spool/cron/crontabs/root 
+        #自动检查到期解封，默认每分钟执行一次
+        echo "*/1 * * * * /bin/sh $masterhome/auto_release.sh" >>/var/spool/cron/crontabs/root 
+    elif [[ "${ID}" == "centos" ]];
+        #处理nodes提交的ip，默认每5分钟执行一次    
+        echo "*/5 * * * * /bin/sh /$masterhome/run.sh" >>/var/spool/cron/root
+        #自动检查到期解封，默认每分钟执行一次
+        echo "*/1 * * * * /bin/sh $masterhome/auto_release.sh" >>/var/spool/cron/root
+    else
+        echo -e "${Error} ${RedBG} 当前系统为 ${ID} ${VERSION_ID} 不在支持的系统列表内，安装中断 ${Font}"
+        exit 1
 fi
 
 #首次运行或者本地数据缺失情况下， 需要从接口导入已封禁的数据
@@ -185,12 +185,14 @@ chmod 777 *
 $flowcheckhome/check_interface.sh
 
 if [[ "${ID}" == "ubuntu" ]] ||  [[ "${ID}" == "debian" ]];then
-    echo "*/1 * * * * $flowcheckhome/check_interface.sh" >>/var/spool/cron/crontabs/root 
-    systemctl restart crond.service
-elif [[ "${ID}" == "centos" ]];
-    echo "*/1 * * * * $flowcheckhome/check_interface.sh" >>/var/spool/cron/root
-    systemctl restart crond.service
-else
+        echo "*/1 * * * * $flowcheckhome/check_interface.sh" >>/var/spool/cron/crontabs/root 
+        systemctl restart crond.service
+    elif [[ "${ID}" == "centos" ]];
+        echo "*/1 * * * * $flowcheckhome/check_interface.sh" >>/var/spool/cron/root
+        systemctl restart crond.service
+    else
+        echo -e "${Error} ${RedBG} 当前系统为 ${ID} ${VERSION_ID} 不在支持的系统列表内，安装中断 ${Font}"
+        exit 1
 fi
 }   
 
