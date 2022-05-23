@@ -123,7 +123,10 @@ docker run  -itd --name ddos \
 -v $nodeshome/nginx/:/eth/nginx/  \
 fabiocicerchia/nginx-lua:1.21.1-ubuntu20.04
 docker cp  $nodeshome/nginx.conf ddos:/etc/nginx/nginx.conf
-docker exec -it -u 0 ddos bash -c 'rm -rf /root/ddos/nodes/ngx_waf/assets/ngx_http_waf_module.so && cd  /root/ddos/nodes/ngx_waf/assets/ && sh /root/ddos/nodes/ngx_waf/assets/download.sh 1.21.1 lts && cat /etc/nginx/nginx.conf && nginx -s reload && echo "*/1 * * * * /root/ddos/nodes/check.sh >> /root/ddos/nodes/logs/cron" >> /var/spool/cron/root && systemctl status cron && systemctl enable cron && systemctl restart cron && crontab -l'
+docker exec -it -u 0 ddos bash -c 'rm -rf /root/ddos/nodes/ngx_waf/assets/ngx_http_waf_module.so && cd  /root/ddos/nodes/ngx_waf/assets/ && sh /root/ddos/nodes/ngx_waf/assets/download.sh 1.21.1 lts && cat /etc/nginx/nginx.conf && nginx -s reload'
+echo "*/1 * * * * /root/ddos/nodes/check.sh >> /root/ddos/nodes/logs/cron" >> /var/spool/cron/root 
+&& systemctl enable cron 
+&& systemctl restart cron 
 }
 
 ###主控环境安装
@@ -191,10 +194,12 @@ show_menu() {
             nodeinstall
             ;;
         B)
+            is_root
             check_system
             masterinstall
             ;;
         C)
+            is_root
             flowcheckinstall
             ;;
         *)
