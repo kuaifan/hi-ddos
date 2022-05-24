@@ -152,12 +152,12 @@ chmod +X $masterhome/hooks/*.sh
 
 if [[ "${ID}" == "ubuntu" ]] ||  [[ "${ID}" == "debian" ]];then
         #处理nodes提交的ip，默认每5分钟执行一次
-        echo "*/5 * * * * /bin/sh /$masterhome/run.sh" >>/var/spool/cron/crontabs/root 
+        echo "*/5 * * * * /bin/sh $masterhome/run.sh" >>/var/spool/cron/crontabs/root 
         #自动检查到期解封，默认每分钟执行一次
         echo "*/1 * * * * /bin/sh $masterhome/auto_release.sh" >>/var/spool/cron/crontabs/root
     elif [[ "${ID}" == "centos" ]];then
         #处理nodes提交的ip，默认每5分钟执行一次    
-        echo "*/5 * * * * /bin/sh /$masterhome/run.sh" >>/var/spool/cron/root
+        echo "*/5 * * * * /bin/sh $masterhome/run.sh" >>/var/spool/cron/root
         #自动检查到期解封，默认每分钟执行一次
         echo "*/1 * * * * /bin/sh $masterhome/auto_release.sh" >>/var/spool/cron/root
     else
@@ -252,12 +252,22 @@ echo $1|grep -E  "^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\:[0-9]{1,5}$" 
 
 }
 
+update_cmd(){
+    curl -Ok https://raw.githubusercontent.com/kuaifan/hi-ddos/master/cmd >/dev/null 2>&1
+    if [ $? -eq  0 ]; then
+        echo -e "${OK} ${GreenBG} 更新完成！ ${Font}"
+    else
+        echo -e "${Error} ${RedBG} 更新失败，请检查网络！ ${Font}"
+    fi
+}
+
 show_menu() {
 #    web_clone_install
     echo -e "—————————— 安装向导 ——————————"
     echo -e "${Green}A.${Font}  安装并启动cdn节点程序"
     echo -e "${Green}B.${Font}  安装并启动 主控 程序"
     echo -e "${Green}C.${Font}  安装并启动网络检测程序"
+    echo -e "${Green}D.${Font}  更新cmd脚本"
     echo -e "${Green}Z.${Font}  退出脚本 \n"
 
     read -rp "请输入代码：" menu_num
@@ -281,6 +291,9 @@ show_menu() {
         C)
             is_root
             flowcheckinstall
+            ;;
+        D)
+            update_cmd
             ;;
         *)
             echo -e "${RedBG}请输入正确的操作代码${Font}"

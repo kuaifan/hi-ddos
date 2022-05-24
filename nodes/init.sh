@@ -11,6 +11,6 @@ DOWNLOAD_TIMEOUT=5
 
 BLOCKED_STORE_FILE=$ROOT_PATH"/blocking.txt"
 
-WEBHOOK_URL="http://1.1.1.1:65535/hooks/ipreport"
+WEBHOOK_URL="http://1.1.1.1:55/hooks/ipreport"
 
 mkdir -p $LOG_PATH
