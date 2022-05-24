@@ -152,12 +152,12 @@ chmod +X $masterhome/hooks/*.sh
 
 if [[ "${ID}" == "ubuntu" ]] ||  [[ "${ID}" == "debian" ]];then
         #处理nodes提交的ip，默认每5分钟执行一次
-        echo "*/5 * * * * /bin/sh /$masterhome/run.sh" >>/var/spool/cron/crontabs/root 
+        echo "*/5 * * * * /bin/sh $masterhome/run.sh" >>/var/spool/cron/crontabs/root 
         #自动检查到期解封，默认每分钟执行一次
         echo "*/1 * * * * /bin/sh $masterhome/auto_release.sh" >>/var/spool/cron/crontabs/root
     elif [[ "${ID}" == "centos" ]];then
         #处理nodes提交的ip，默认每5分钟执行一次    
-        echo "*/5 * * * * /bin/sh /$masterhome/run.sh" >>/var/spool/cron/root
+        echo "*/5 * * * * /bin/sh $masterhome/run.sh" >>/var/spool/cron/root
         #自动检查到期解封，默认每分钟执行一次
         echo "*/1 * * * * /bin/sh $masterhome/auto_release.sh" >>/var/spool/cron/root
     else
