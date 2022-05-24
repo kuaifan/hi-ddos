@@ -13,3 +13,5 @@
 ## 输入c，安装网络检测程序
 ![image](https://user-images.githubusercontent.com/85656971/169995643-30cbe3ff-64e4-46d3-83dd-ec5e3a9f8938.png)
 
+## 输入d,更新cmd脚本
+
