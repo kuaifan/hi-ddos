@@ -197,6 +197,61 @@ if [[ "${ID}" == "ubuntu" ]] ||  [[ "${ID}" == "debian" ]];then
 fi
 }   
 
+webhook_url(){
+    while true; do
+      read -rp "请输入主控webhook的ip地址和端口(ip:主控端口号):" webhook_ip
+      check_ip $webhook_ip
+      [ $? -eq 0 ] && break
+    done
+    s_webhook=$(cat /root/hi-ddos/nodes/init.sh | grep 'WEBHOOK_URL')
+    sed -i 's#'$s_webhook'#WEBHOOK_URL="http://'$webhook_ip'/hooks/ipreport"#g' $nodeshome/init.sh
+    if [ $? -eq 0 ];then
+        echo -e "${OK} ${GreenBG} WEBHOOK地址修改完成！ ${Font}"        
+    else
+        echo -e "${Error} ${RedBG} $1 失败${Font}"
+        exit 1
+    fi
+}
+
+check_ip() {
+echo $1|grep -E  "^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\:[0-9]{1,5}$" > /dev/null;
+    if [ $? -ne 0 ];then
+        echo $1|grep -E  "^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\:[0-9]{1,5}$" > /dev/null;
+        if [ $? -ne 0 ];then
+            echo -e "${Error} ${RedBG} IP地址和端口必须全部为数字或符号错误!  ${Font}" 
+            return 1
+        fi
+    fi
+    ipaddr=$1
+    a=`echo $ipaddr|awk -F . '{print $1}'`  #以"."分隔，取出每个列的值 
+    b=`echo $ipaddr|awk -F . '{print $2}'`
+    c=`echo $ipaddr|awk -F . '{print $3}'`
+    d=`echo $ipaddr|awk -F . '{print $4}'|awk -F : '{print $1}'`
+    e=`echo $ipaddr|awk -F : '{print $2}'`
+    for num in $a $b $c $d
+    do
+        if [ $num -gt 255 ] || [ $num -lt 0 ]    #每个数值必须在0-255之间 
+        then
+            echo -e "${Error} ${RedBG} $ipaddr 中，字段"$num"错误 ${Font} ,范围在[1-255]" 
+            return 1
+        fi
+   done
+
+    for mask in $e
+    do
+        if [ $mask -gt 65535 ] || [ $mask -lt 1 ]    #每个数值必须在1-65535之间 
+        then
+            echo -e "${Error} ${RedBG} $ipaddr 中，字段"$mask"错误 ${Font} ,范围在[1-65535]" 
+            return 1
+        fi
+   done
+   e=`echo $e | sed -E 's/^0{1,5}//'`
+   webhook_ip="$a.$b.$c.$d:$e"
+   echo $webhook_ip
+   return 0
+
+}
+
 show_menu() {
 #    web_clone_install
     echo -e "—————————— 安装向导 ——————————"
@@ -215,6 +270,7 @@ show_menu() {
         A)
             is_root
             check_docker
+            webhook_url
             nodeinstall
             ;;
         B)
