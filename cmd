@@ -122,6 +122,7 @@ docker run  -itd --name ddos \
 -v /var/run/docker.sock:/var/run/docker.sock  \
 -v /usr/bin/docker:/usr/bin/docker  \
 -v $nodeshome/nginx/:/eth/nginx/  \
+-v $nodeshome/nginx/html:/usr/share/nginx/html \
 fabiocicerchia/nginx-lua:1.21.1-ubuntu20.04
 docker cp  $nodeshome/nginx.conf ddos:/etc/nginx/nginx.conf
 docker exec -it -u 0 ddos bash -c 'rm -rf '$nodeshome'/nodes/ngx_waf/assets/ngx_http_waf_module.so && cd '$nodeshome'/ngx_waf/assets/ && sh '$nodeshome'/ngx_waf/assets/download.sh 1.21.1 lts && cat /etc/nginx/nginx.conf && nginx -t && nginx -s reload'
