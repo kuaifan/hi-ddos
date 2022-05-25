@@ -112,7 +112,7 @@ docker rm -f tmp-nginx-container
 cd $nodeshome
 git clone https://github.com/ADD-SP/ngx_waf.git
 ###
-docker rm -f ddos
+docker rm -f ddos >/dev/null
 docker run  -itd --name ddos \
 --privileged  \
 -p 80:80 \
@@ -124,7 +124,7 @@ docker run  -itd --name ddos \
 -v $nodeshome/nginx/:/eth/nginx/  \
 fabiocicerchia/nginx-lua:1.21.1-ubuntu20.04
 docker cp  $nodeshome/nginx.conf ddos:/etc/nginx/nginx.conf
-docker exec -it -u 0 ddos bash -c 'rm -rf '$nodeshome'/nodes/ngx_waf/assets/ngx_http_waf_module.so && cd '$nodeshome'/ngx_waf/assets/ && sh'$nodeshome'/ngx_waf/assets/download.sh 1.21.1 lts && cat /etc/nginx/nginx.conf && nginx -s reload'
+docker exec -it -u 0 ddos bash -c 'rm -rf '$nodeshome'/nodes/ngx_waf/assets/ngx_http_waf_module.so && cd '$nodeshome'/ngx_waf/assets/ && sh '$nodeshome'/ngx_waf/assets/download.sh 1.21.1 lts && cat /etc/nginx/nginx.conf && nginx -t && nginx -s reload'
 if [[ "${ID}" == "ubuntu" ]] ||  [[ "${ID}" == "debian" ]];then
         echo "*/5 * * * * /bin/sh $nodeshome/run.sh >> $nodeshome/logs/run.log" >> /var/spool/cron/crontabs/root
         echo "* */1 * * * /bin/sh $nodeshome/clean_iptable.sh >> $nodeshome/logs/clean_iptable.log" >> /var/spool/cron/crontabs/root  
