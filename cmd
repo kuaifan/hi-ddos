@@ -256,7 +256,7 @@ echo $1|grep -E  "^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\:[0-9]{1,5}$" 
 
 update_cmd(){
     curl -Ok https://raw.githubusercontent.com/kuaifan/hi-ddos/master/cmd >/dev/null 2>&1
-    if [ $? -eq  0 ]; then
+    if [ $? -eq  0 ];then
         echo -e "${OK} ${GreenBG} 更新完成！ ${Font}"
     else
         echo -e "${Error} ${RedBG} 更新失败，请检查网络！ ${Font}"
