@@ -126,9 +126,11 @@ fabiocicerchia/nginx-lua:1.21.1-ubuntu20.04
 docker cp  $nodeshome/nginx.conf ddos:/etc/nginx/nginx.conf
 docker exec -it -u 0 ddos bash -c 'rm -rf '$nodeshome'/nodes/ngx_waf/assets/ngx_http_waf_module.so && cd '$nodeshome'/ngx_waf/assets/ && sh'$nodeshome'/ngx_waf/assets/download.sh 1.21.1 lts && cat /etc/nginx/nginx.conf && nginx -s reload'
 if [[ "${ID}" == "ubuntu" ]] ||  [[ "${ID}" == "debian" ]];then
-        echo "*/1 * * * * $nodeshome/check.sh >> $nodeshome/logs/cron" >> /var/spool/cron/crontabs/root  
+        echo "*/5 * * * * /bin/sh $nodeshome/run.sh >> $nodeshome/logs/run.log" >> /var/spool/cron/crontabs/root
+        echo "* */1 * * * /bin/sh $nodeshome/clean_iptable.sh >> $nodeshome/logs/clean_iptable.log" >> /var/spool/cron/crontabs/root  
     elif [[ "${ID}" == "centos" ]];then
-        echo "*/1 * * * * $nodeshome/check.sh >> $nodeshome/logs/cron" >> /var/spool/cron/root 
+        echo "*/5 * * * * /bin/sh $nodeshome/run.sh >> $nodeshome/logs/run.log" >> /var/spool/cron/root 
+        echo "* */1 * * * /bin/sh $nodeshome/clean_iptable.sh >> $nodeshome/logs/clean_iptable.log" >> /var/spool/cron/root 
     else
         echo -e "${Error} ${RedBG} 当前系统为 ${ID} ${VERSION_ID} 不在支持的系统列表内，安装中断 ${Font}"
         exit 1
