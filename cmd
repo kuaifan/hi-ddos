@@ -268,9 +268,7 @@ show_menu() {
 #    web_clone_install
     echo -e "—————————— 安装向导 ——————————"
     echo -e "${Green}A.${Font}  安装并启动cdn节点程序"
-    echo -e "${Green}B.${Font}  安装并启动 主控 程序"
-    echo -e "${Green}C.${Font}  安装并启动网络检测程序"
-    echo -e "${Green}D.${Font}  更新cmd脚本"
+    echo -e "${Green}B.${Font}  更新cmd脚本"
     echo -e "${Green}Z.${Font}  退出脚本 \n"
 
     read -rp "请输入代码：" menu_num
@@ -287,15 +285,6 @@ show_menu() {
             nodeinstall
             ;;
         B)
-            is_root
-            check_system
-            masterinstall
-            ;;
-        C)
-            is_root
-            flowcheckinstall
-            ;;
-        D)
             update_cmd
             ;;
         *)
