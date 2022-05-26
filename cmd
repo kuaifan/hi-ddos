@@ -121,7 +121,7 @@ docker run  -itd --name ddos \
 -v $nodeshome:$nodeshome \
 -v /var/run/docker.sock:/var/run/docker.sock  \
 -v /usr/bin/docker:/usr/bin/docker  \
--v $nodeshome/nginx/:/eth/nginx/  \
+-v $nodeshome/nginx/:/etc/nginx/  \
 -v $nodeshome/nginx/html:/usr/share/nginx/html \
 fabiocicerchia/nginx-lua:1.21.1-ubuntu20.04
 docker cp  $nodeshome/nginx.conf ddos:/etc/nginx/nginx.conf
