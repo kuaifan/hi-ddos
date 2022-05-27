@@ -632,8 +632,10 @@ show_menu() {
     echo -e "${Green}C.${Font}  开启节点网页代理功能"
     echo -e "${Green}D.${Font}  关闭节点网页代理功能"
     echo -e "${Green}E.${Font}  安装并启动 主控 程序"
-    echo -e "${Green}F.${Font}  安装并启动网络检测程序"
-    echo -e "${Green}G.${Font}  更新cmd脚本"
+    echo -e "${Green}F.${Font}  卸载 主控 程序"
+    echo -e "${Green}G.${Font}  安装并启动网络检测程序"
+    echo -e "${Green}H.${Font}  卸载网络检测程序"
+    echo -e "${Green}I.${Font}  更新cmd脚本"
     echo -e "${Green}Z.${Font}  退出脚本 \n"
 
     read -rp "请输入代码：" menu_num
@@ -668,9 +670,17 @@ show_menu() {
             ;;
         F)
             is_root
-            flowcheckinstall
+            masteruninstall
             ;;
         G)
+            is_root
+            flowcheckinstall
+            ;;
+        H)
+            is_root
+            flowcheckuninstall
+            ;;
+        I)
             update_cmd
             ;;
         *)
