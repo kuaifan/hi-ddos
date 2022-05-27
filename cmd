@@ -628,10 +628,10 @@ show_menu() {
 #    web_clone_install
     echo -e "—————————— 安装向导 ——————————"
     echo -e "${Green}A.${Font}  安装并启动cdn节点程序"
-    echo -e "${Green}B.${Font}  卸载cdn节点程序"
-    echo -e "${Green}C.${Font}  开启节点网页代理功能"
-    echo -e "${Green}D.${Font}  关闭节点网页代理功能"
-    echo -e "${Green}E.${Font}  更新cmd脚本"
+    #echo -e "${Green}B.${Font}  卸载cdn节点程序"
+    echo -e "${Green}B.${Font}  开启节点网页代理功能"
+    #echo -e "${Green}D.${Font}  关闭节点网页代理功能"
+    echo -e "${Green}C.${Font}  更新cmd脚本"
     echo -e "${Green}Z.${Font}  退出脚本 \n"
 
     read -rp "请输入代码：" menu_num
@@ -647,19 +647,19 @@ show_menu() {
             webhook_url
             nodeinstall
             ;;
+       # B)
+        #    is_root
+        #    nodesuninstall
+        #    ;;
         B)
-            is_root
-            nodesuninstall
-            ;;
-        C)
             is_root
             nginxproxy
             ;;
-        D)
-            is_root
-            uninstall_proxy
-            ;;  
-        E)
+        #D)
+        #    is_root
+        #    uninstall_proxy
+        #    ;;  
+        C)
             update_cmd
             ;;
         *)
