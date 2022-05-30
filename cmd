@@ -26,7 +26,7 @@ source /etc/os-release
 is_root() {
     if [ 0 == $UID ]; then
         echo -e "${OK} ${GreenBG} 当前用户是root用户，权限正常... ${Font}"
-        sleep 3
+        sleep 2
     else
         echo -e "${Error} ${RedBG} 当前用户不是root用户，请切换到root用户后重新执行脚本 ${Font}"
         exit 1
@@ -169,10 +169,10 @@ domain_check() {
     local_ip=$(curl ip.sb)
     echo -e "域名dns解析IP：${domain_ip}"
     echo -e "本机IP: ${local_ip}"
-    sleep 2
+    sleep 1
     if [[ $(echo "${local_ip}" | tr '.' '+' | bc) -eq $(echo "${domain_ip}" | tr '.' '+' | bc) ]]; then
         echo -e "${OK} ${GreenBG} 域名dns解析IP 与 本机IP 匹配 ${Font}"
-        sleep 2
+        sleep 1
     else
         echo -e "${Error} ${RedBG} 域名dns解析IP 与 本机IP 不匹配 是否继续安装？（Y/n）${Font}"
         read -r dnscontinue_install
@@ -180,7 +180,7 @@ domain_check() {
         case $dnscontinue_install in
         [yY][eE][sS] | [yY])
             echo -e "${GreenBG} 继续安装 ${Font}"
-            sleep 2
+            sleep 1
             ;;
         *)
             echo -e "${RedBG} 安装终止 ${Font}"
@@ -200,7 +200,6 @@ docker rm -f tmp-nginx-container
 cd $nodeshome
 git clone https://github.com/ADD-SP/ngx_waf.git
 ###
-docker rm -f ddos >/dev/null
 docker run  -itd --name ddos \
 --privileged  \
 -p 80:80 \
@@ -212,28 +211,61 @@ docker run  -itd --name ddos \
 -v $nodeshome/nginx/:/etc/nginx/  \
 -v $nodeshome/nginx/html:/usr/share/nginx/html \
 fabiocicerchia/nginx-lua:1.21.1-ubuntu20.04
-docker cp  $nodeshome/nginx.conf ddos:/etc/nginx/nginx.conf
-docker exec -it -u 0 ddos bash -c "sed -i '1 i\load_module "$nodeshome/ngx_waf/assets/ngx_http_waf_module.so";'  /etc/nginx/nginx.conf"
-docker exec -it -u 0 ddos bash -c 'rm -rf '$nodeshome'/ngx_waf/assets/ngx_http_waf_module.so && cd '$nodeshome'/ngx_waf/assets/ && sh '$nodeshome'/ngx_waf/assets/download.sh 1.21.1 lts && nginx -T && nginx -t && nginx -s reload'
+sleep 1
+docker exec -it -u 0 ddos bash -c 'rm -rf '$nodeshome'/ngx_waf/assets/ngx_http_waf_module.so && cd '$nodeshome'/ngx_waf/assets/ && sh '$nodeshome'/ngx_waf/assets/download.sh 1.21.1 lts' 
+cp  $nodeshome/nginx.conf $nodeshome/nginx/nginx.conf
+docker exec -it -u 0 ddos bash -c "sed -i '1 i\load_module "$nodeshome/ngx_waf/assets/ngx_http_waf_module.so";'  /etc/nginx/nginx.conf" 
+docker exec -it -u 0 ddos bash -c 'nginx -T && nginx -t && nginx -s reload'
     if [[ 0 -eq $? ]]; then
+        if [[ "${ID}" == "ubuntu" ]] ||  [[ "${ID}" == "debian" ]];then
+            echo "*/5 * * * * /bin/sh $nodeshome/run.sh >> $nodeshome/logs/run.log" >> /var/spool/cron/crontabs/root
+            echo "* */1 * * * /bin/sh $nodeshome/clean_iptable.sh >> $nodeshome/logs/clean_iptable.log" >> /var/spool/cron/crontabs/root
+            systemctl enable cron &> /dev/null
+            sleep 1
+            systemctl restart cron  &> /dev/null 
+        elif [[ "${ID}" == "centos" ]];then
+            echo "*/5 * * * * /bin/sh $nodeshome/run.sh >> $nodeshome/logs/run.log" >> /var/spool/cron/root 
+            echo "* */1 * * * /bin/sh $nodeshome/clean_iptable.sh >> $nodeshome/logs/clean_iptable.log" >> /var/spool/cron/root
+            systemctl enable crond.service &> /dev/null
+            sleep 1
+            systemctl restart crond.service
+        else
+            echo -e "${Error} ${RedBG} 当前系统为 ${ID} ${VERSION_ID} 不在支持的系统列表内，安装中断 ${Font}"
+            exit 1
+        fi
         echo -e "${OK} ${GreenBG} 节点安装 完成！ ${Font}"
         sleep 1
     else
+        rm -rf $nodeshome/nginx
+        docker rm -f ddos &>/dev/null
         echo -e "${Error} ${RedBG} 节点安装失败 请重试！${Font}"
         exit 1
     fi
-if [[ "${ID}" == "ubuntu" ]] ||  [[ "${ID}" == "debian" ]];then
-        echo "*/5 * * * * /bin/sh $nodeshome/run.sh >> $nodeshome/logs/run.log" >> /var/spool/cron/crontabs/root
-        echo "* */1 * * * /bin/sh $nodeshome/clean_iptable.sh >> $nodeshome/logs/clean_iptable.log" >> /var/spool/cron/crontabs/root  
-    elif [[ "${ID}" == "centos" ]];then
-        echo "*/5 * * * * /bin/sh $nodeshome/run.sh >> $nodeshome/logs/run.log" >> /var/spool/cron/root 
-        echo "* */1 * * * /bin/sh $nodeshome/clean_iptable.sh >> $nodeshome/logs/clean_iptable.log" >> /var/spool/cron/root 
+}
+
+nodesuninstall(){
+    docker ps | grep ddos
+    if [[ 0 -eq $? ]]; then
+        docker rm -f ddos
+        rm -rf ${ssl_dir_path}/*
+        rm -rf "$HOME/.acme.sh/*"
+        rm -rf ${conf_dir_path}/*
+        rm -rf ${nodeshome}/ngx_waf
+        rm -rf ${nodeshome}/logs
+        if [[ "${ID}" == "centos" ]]; then
+            sed -i '/update.sh/d' /var/spool/cron/root
+            sed -i '/run.sh/d' /var/spool/cron/root
+            sed -i '/clean_iptable.sh/d' /var/spool/cron/root
+        else
+            sed -i '/update.sh/d' /var/spool/cron/crontabs/root
+            sed -i '/run.sh/d' /var/spool/cron/crontabs/root
+            sed -i '/clean_iptable.sh/d' /var/spool/cron/crontabs/root
+        fi
+        echo -e "${OK} ${GreenBG} 已卸载节点并已清理所有数据${Font}"
     else
-        echo -e "${Error} ${RedBG} 当前系统为 ${ID} ${VERSION_ID} 不在支持的系统列表内，安装中断 ${Font}"
+        echo -e "${Error} ${RedBG} 未发现有节点部署，请检查后重试${Font}"
         exit 1
-fi
-systemctl enable cron &> /dev/null
-systemctl restart cron  &> /dev/null
+    fi  
 }
 
 nginxproxy() {
@@ -338,7 +370,7 @@ ssl_judge_and_install() {
     if [[ -f "$ssl_dir_path/$domain.key" || -f "$ssl_dir_path/$domain.crt" ]]; then
         echo "$ssl_dir_path 目录下证书文件已存在"
         echo -e "${OK} ${GreenBG} 是否删除 [Y/n]? ${Font}"
-        read -r ssl_delete
+        read -r ssl_delete  
         [[ -z ${ssl_delete} ]] && ssl_delete="Y"
         case $ssl_delete in
         [yY][eE][sS] | [yY])
@@ -418,7 +450,7 @@ acme() {
     if "$HOME"/.acme.sh/acme.sh --issue -d "${domain}" -w ${www_root_path} --standalone -k ec-256 --force --test; then
         echo -e "${OK} ${GreenBG} SSL 证书测试签发成功，开始正式签发 ${Font}"
         rm -rf "$HOME/.acme.sh/${domain}_ecc"
-        sleep 2
+        sleep 1
     else
         echo -e "${Error} ${RedBG} SSL 证书测试签发失败,已还原环境,请检查后重试  ${Font}"
         rm -rf "$HOME/.acme.sh/${domain}_ecc"
@@ -427,17 +459,16 @@ acme() {
 
     if "$HOME"/.acme.sh/acme.sh --issue -d "${domain}" -w ${www_root_path} --server letsencrypt --standalone -k ec-256 --force; then
         echo -e "${OK} ${GreenBG} SSL 证书生成成功 ${Font}"
-        sleep 2
+        sleep 1
         mkdir -p $ssl_dir_path
         if "$HOME"/.acme.sh/acme.sh --installcert -d "${domain}" --fullchainpath "${ssl_dir_path}/$domain.crt" --keypath "${ssl_dir_path}/$domain.key" --ecc --force; then
             echo -e "${OK} ${GreenBG} 证书配置成功 ${Font}"
             echo -e "${OK} ${GreenBG} 欢迎访问：https://$domain ${Font}"
-            sleep 2
+            sleep 1
         fi
     else
         echo -e "${Error} ${RedBG} SSL 证书生成失败,已还原环境,请检查后重试 ${Font}"
         rm -rf "$HOME/.acme.sh/${domain}_ecc"
-        
     fi
 }
 
@@ -461,24 +492,7 @@ EOF
     fi
     judge "安装证书自动更新 "
 }
-nodesuninstall(){
-    docker rm -f ddos
-    rm -rf ${ssl_dir_path}/*
-    rm -rf "$HOME/.acme.sh/*"
-    rm -rf ${conf_dir_path}/*
-    rm -rf ${nodeshome}/ngx_waf
-    rm -rf ${nodeshome}/logs
-    if [[ "${ID}" == "centos" ]]; then
-        sed -i '/'update.sh'/d' /var/spool/cron/root
-        sed -i '/'$nodeshome/run.sh'/d' /var/spool/cron/root
-        sed -i '/'$nodeshome/clean_iptable.sh'/d' /var/spool/cron/root
-    else
-        sed -i '/'update.sh'/d' /var/spool/cron/crontabs/root
-        sed -i '/'$nodeshome/run.sh'/d' /var/spool/cron/crontabs/root
-        sed -i '/'$nodeshome/clean_iptable.sh'/d' /var/spool/cron/crontabs/root
-    fi
-        echo -e "${OK} ${GreenBG} 已卸载节点并已清理所有数据${Font}"
-}
+
 
 uninstall_proxy(){
     while [ -z "$domainun" ]; do
@@ -507,7 +521,7 @@ uninstall_proxy(){
             ;;
         esac
     else
-        echo -e "${Error} ${RedBG} 未发现该域名配置文件，请检查后重试${Font}"
+        echo -e "${Error} ${RedBG} 未发现该域名代理配置文件，请检查后重试${Font}"
         exit 1
     fi
 }
@@ -519,47 +533,107 @@ masterinstall(){
     if [ -z "$webhookport" ]; then
             webhookport=9000
     fi
-$INS install sqlite
-$INS install jq
+$INS install sqlite -y
+$INS install jq -y
 chmod +X $masterhome/run.sh
 chmod +X $masterhome/import_exist_blocked_ip_from_api.sh
 chmod +X $masterhome/hooks/*.sh
-
-if [[ "${ID}" == "ubuntu" ]] ||  [[ "${ID}" == "debian" ]];then
-        #处理nodes提交的ip，默认每5分钟执行一次
-        echo "*/5 * * * * /bin/sh $masterhome/run.sh" >>/var/spool/cron/crontabs/root 
-        #自动检查到期解封，默认每分钟执行一次
-        echo "*/1 * * * * /bin/sh $masterhome/auto_release.sh" >>/var/spool/cron/crontabs/root
-    elif [[ "${ID}" == "centos" ]];then
-        #处理nodes提交的ip，默认每5分钟执行一次    
-        echo "*/5 * * * * /bin/sh $masterhome/run.sh" >>/var/spool/cron/root
-        #自动检查到期解封，默认每分钟执行一次
-        echo "*/1 * * * * /bin/sh $masterhome/auto_release.sh" >>/var/spool/cron/root
-    else
-        echo -e "${Error} ${RedBG} 当前系统为 ${ID} ${VERSION_ID} 不在支持的系统列表内，安装中断 ${Font}"
-        exit 1
-fi
-
 #首次运行或者本地数据缺失情况下， 需要从接口导入已封禁的数据
-/bin/bash $masterhome/import_exist_blocked_ip_from_api.sh
-chmod 777 $ddoshome/ddos/webhook
-nohup $ddoshome/ddos/webhook/webhook -port $webhookport -hotreload -hooks $masterhome/hooks/hooks.json -verbose &
-judge "webhook程序启动"
+/bin/bash $masterhome/import_exist_blocked_ip_from_api.sh &> /dev/null
+chmod 777 $ddoshome/webhook
+nohup $ddoshome/webhook/webhook -port $webhookport -hotreload -hooks $masterhome/hooks/hooks.json -verbose &
+ps -ef | grep -v grep |grep $webhookport
+    if [[ 0 -eq $? ]]; then
+        if [[ "${ID}" == "ubuntu" ]] ||  [[ "${ID}" == "debian" ]];then
+            #处理nodes提交的ip，默认每5分钟执行一次
+            echo "*/5 * * * * /bin/sh $masterhome/run.sh" >>/var/spool/cron/crontabs/root 
+            #自动检查到期解封，默认每分钟执行一次
+            echo "*/1 * * * * /bin/sh $masterhome/auto_release.sh" >>/var/spool/cron/crontabs/root
+        elif [[ "${ID}" == "centos" ]];then
+            #处理nodes提交的ip，默认每5分钟执行一次    
+            echo "*/5 * * * * /bin/sh $masterhome/run.sh" >>/var/spool/cron/root
+            #自动检查到期解封，默认每分钟执行一次
+            echo "*/1 * * * * /bin/sh $masterhome/auto_release.sh" >>/var/spool/cron/root
+        else
+            echo -e "${Error} ${RedBG} 当前系统为 ${ID} ${VERSION_ID} 不在支持的系统列表内，安装中断 ${Font}"
+            exit 1
+        fi
+            cat >${masterhome}/hooks/hook.json <<EOF
+[
+  {
+    "id": "ipreport",
+    "execute-command": "$masterhome/hooks/ipreport.sh",
+    "http-methods": ["POST"],
+    "include-command-output-in-response":true,
+    "include-command-output-in-response-on-error":true,
+    "trigger-rule-mismatch-http-response-code": 400,
+    "pass-arguments-to-command": [
+      {
+        "source": "payload",
+        "name": "report_ips"
+      }
+    ]
+  },
+  {
+    "id": "release",
+    "execute-command": "$masterhome/hooks/release.sh",
+    "http-methods": ["POST"],
+    "include-command-output-in-response":true,
+    "include-command-output-in-response-on-error":true,
+    "trigger-rule-mismatch-http-response-code": 400,
+    "pass-arguments-to-command": [
+      {
+        "source": "payload",
+        "name": "ip"
+      }
+    ]
+  },
+  {
+    "id": "search",
+    "execute-command": "$masterhome/hooks/search.sh",
+    "http-methods": ["GET"],
+    "include-command-output-in-response":true,
+    "include-command-output-in-response-on-error":true,
+    "trigger-rule-mismatch-http-response-code": 400,
+    "pass-arguments-to-command": [
+      {
+        "source": "url",
+        "name": "ac"
+      }
+    ]
+  }
+]
+EOF
+        echo -e "${OK} ${GreenBG} webhook程序启动完成！ ${Font}"
+        sleep 1
+    else
+        $INS remove -y sqlite
+        $INS remove -y jq
+        echo -e "${Error} ${RedBG} 主控程序安装失败，已还原环境，请重试！${Font}"
+        exit 1
+    fi
 }
 
 masteruninstall(){
-    webhook_port=`ps -ef |grep -v grep | grep $ddoshome/webhook  | awk '{print $2}'`
-    kill -9 $webhook_port
-    $INS remove -y sqlite
-    $INS remove -y jq
-    if [[ "${ID}" == "centos" ]]; then
-        sed -i '/'$masterhome/run.sh'/d' /var/spool/cron/root
-        sed -i '/'$nodeshome/clean_iptable.sh'/d' /var/spool/cron/root
+    ps -ef |grep -v grep | grep $ddoshome/webhook || grep $masterhome/run.sh /var/spool/cron/root || grep $masterhome/run.sh /var/spool/cron/crontabs/root
+    if [[ 0 -eq $? ]]; then
+        webhook_port=`ps -ef |grep -v grep | grep $ddoshome/webhook  | awk '{print $2}'`
+        kill -9 $webhook_port
+        $INS remove -y sqlite
+        $INS remove -y jq
+        if [[ "${ID}" == "centos" ]]; then
+            sed -i '/run.sh/d' /var/spool/cron/root
+            sed -i '/clean_iptable.sh/d' /var/spool/cron/root
+        else
+            sed -i '/run.sh/d' /var/spool/cron/crontabs/root
+            sed -i '/auto_release.sh/d' /var/spool/cron/crontabs/root
+        fi
+        rm -rf $masterhome/db
+            echo -e "${OK} ${GreenBG} 已卸载主控程序并已清理所有数据${Font}"
     else
-        sed -i '/'$masterhome/run.sh'/d' /var/spool/cron/crontabs/root
-        sed -i '/'$masterhome/auto_release.sh'/d' /var/spool/cron/crontabs/root
+        echo -e "${Error} ${RedBG} 未发现主控程序的安装运行${Font}"
+        exit 1
     fi
-        echo -e "${OK} ${GreenBG} 已卸载主控程序并已清理所有数据${Font}"
 }
 
 
@@ -574,27 +648,44 @@ echo 0 > $flowcheckhome/logs/status.log
 
 chmod 777 *
 $flowcheckhome/check_interface.sh
-
-if [[ "${ID}" == "ubuntu" ]] ||  [[ "${ID}" == "debian" ]];then
-        echo "*/1 * * * * $flowcheckhome/check_interface.sh" >>/var/spool/cron/crontabs/root 
-        systemctl restart crond.service
-    elif [[ "${ID}" == "centos" ]];then
-        echo "*/1 * * * * $flowcheckhome/check_interface.sh" >>/var/spool/cron/root
-        systemctl restart crond.service
+    if [[ 0 -eq $? ]]; then
+        if [[ "${ID}" == "ubuntu" ]] ||  [[ "${ID}" == "debian" ]];then
+                echo "*/1 * * * * $flowcheckhome/check_interface.sh" >>/var/spool/cron/crontabs/root 
+                systemctl enable cron &> /dev/null
+                sleep 1
+                systemctl restart cron  &> /dev/null 
+            elif [[ "${ID}" == "centos" ]];then
+                echo "*/1 * * * * $flowcheckhome/check_interface.sh" >>/var/spool/cron/root
+                systemctl enable crond.service &> /dev/null
+                sleep 1
+                systemctl restart crond.service
+            else
+                echo -e "${Error} ${RedBG} 当前系统为 ${ID} ${VERSION_ID} 不在支持的系统列表内，安装中断 ${Font}"
+                exit 1
+        fi
+        echo -e "${OK} ${GreenBG} 网络检测程序安装 完成！ ${Font}"
+        sleep 1
     else
-        echo -e "${Error} ${RedBG} 当前系统为 ${ID} ${VERSION_ID} 不在支持的系统列表内，安装中断 ${Font}"
+        rm -rf $flowcheckhome/logs
+        echo -e "${Error} ${RedBG} 节点安装失败,已还原环境,请重试！${Font}"
         exit 1
-fi
+    fi
 }   
 
 flowcheckuninstall(){
-    rm -rf $flowcheckhome/logs
-    if [[ "${ID}" == "centos" ]]; then
-        sed -i '/'$flowcheckhome/check_interface.sh'/d' /var/spool/cron/root
+    grep $flowcheckhome/check_interface.sh /var/spool/cron/root || grep $flowcheckhome/check_interface.sh /var/spool/cron/crontabs/root
+    if [[ 0 -eq $? ]]; then
+        rm -rf $flowcheckhome/logs
+        rm -rf $flowcheckhome/interface_example.txt
+        if [[ "${ID}" == "centos" ]]; then
+            sed -i '/check_interface.sh/d' /var/spool/cron/root
+        else
+            sed -i '/check_interface.sh/d' /var/spool/cron/crontabs/root
+        fi
+            echo -e "${OK} ${GreenBG} 已卸载网络检测程序并已清理所有数据${Font}"
     else
-        sed -i '/'$flowcheckhome/check_interface.sh'/d' /var/spool/cron/crontabs/root
+        echo -e "${Error} ${RedBG} 未发现网络检测程序，请检查后重试${Font}"
     fi
-        echo -e "${OK} ${GreenBG} 已卸载网络检测程序并已清理所有数据${Font}"
 }
 
 webhook_url(){
@@ -628,10 +719,10 @@ show_menu() {
 #    web_clone_install
     echo -e "—————————— 安装向导 ——————————"
     echo -e "${Green}A.${Font}  安装并启动cdn节点程序"
-    #echo -e "${Green}B.${Font}  卸载cdn节点程序"
-    echo -e "${Green}B.${Font}  开启节点网页代理功能"
-    #echo -e "${Green}D.${Font}  关闭节点网页代理功能"
-    echo -e "${Green}C.${Font}  更新cmd脚本"
+    echo -e "${Green}B.${Font}  卸载cdn节点程序"
+    echo -e "${Green}C.${Font}  开启节点网页代理功能"
+    echo -e "${Green}D.${Font}  关闭节点网页代理功能"
+    echo -e "${Green}E.${Font}  更新cmd脚本"
     echo -e "${Green}Z.${Font}  退出脚本 \n"
 
     read -rp "请输入代码：" menu_num
@@ -647,19 +738,22 @@ show_menu() {
             webhook_url
             nodeinstall
             ;;
-       # B)
-        #    is_root
-        #    nodesuninstall
-        #    ;;
         B)
             is_root
+            check_system
+            nodesuninstall
+            ;;
+        C)
+            is_root
+            check_system
             nginxproxy
             ;;
-        #D)
-        #    is_root
-        #    uninstall_proxy
-        #    ;;  
-        C)
+        D)
+            is_root
+            check_system
+            uninstall_proxy
+            ;;  
+        E)
             update_cmd
             ;;
         *)
