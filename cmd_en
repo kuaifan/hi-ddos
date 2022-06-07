@@ -706,7 +706,7 @@ webhook_url(){
 
 
 update_cmd(){
-    curl -Ok https://raw.githubusercontent.com/kuaifan/hi-ddos/master/cmd >/dev/null 2>&1
+    curl -Ok https://raw.githubusercontent.com/kuaifan/hi-ddos/master/cmd_en >/dev/null 2>&1
     if [ $? -eq  0 ];then
         echo -e "${OK} ${GreenBG} update completed! ${Font}"
     else
