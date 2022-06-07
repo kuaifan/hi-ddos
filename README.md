@@ -7,9 +7,9 @@
 ![image](https://user-images.githubusercontent.com/85656971/170966759-333802ab-78ea-4943-8b7d-16abb4fbf117.png)
 
 
-##English script
+## English script
 
-### Install and start the ddos node program
+### a.Install and start the ddos node program
 ```
 bash cmd_en
 ```
@@ -29,20 +29,20 @@ installation is complete
 ```
 ![image](https://user-images.githubusercontent.com/85656971/172306680-51417a52-7053-4c9a-961d-43def858dce6.png)
 
-### Enable node web proxy function
+### c.Enable node web proxy function
 
 ```
 Deploy the DDoS node and enter c(C) to install.  
 
 Enter the domain name of the web site to be represented
 
-For example:www.google.com
+For example:ttt.ltyzds.xyz
 ```
-![image](https://user-images.githubusercontent.com/85656971/172307186-f27b1c80-850b-40d8-9477-03cacf1fa473.png)
+![image](https://user-images.githubusercontent.com/85656971/172312653-a640b270-f0e8-47ce-ae83-1933f2f48df2.png)
 
 ```
-When the domain name of the web site to be proxy is not on this server, you can also set the proxy.
+Wait for script execution to complete
 ```
-![image](https://user-images.githubusercontent.com/85656971/172307896-04cebaee-7206-4cc4-bdf3-b88f433b218f.png)
-![image](https://user-images.githubusercontent.com/85656971/172307951-33ebe243-dbcb-4130-803a-59a21d628301.png)
+![image](https://user-images.githubusercontent.com/85656971/172312742-fd354dcd-6e6d-4bf5-916f-90ede1af5e9e.png)
+
 
