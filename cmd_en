@@ -132,7 +132,7 @@ echo $1|grep -E  "^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\:[0-9]{1,5}$" 
     do
         if [ $mask -gt 65535 ] || [ $mask -lt 1 ]    #每个数值必须在1-65535之间 
         then
-            echo -e "${Error} ${RedBG} $ipaddr ，field"$mask"error ${Font} ,range:[1-65535]" 
+            echo -e "${Error} ${RedBG} $ipaddr ，field" $mask "error ${Font} ,range:[1-65535]" 
             return 1
         fi
     done
