@@ -16,9 +16,9 @@ bash cmd_en
 ![image](https://user-images.githubusercontent.com/85656971/172299758-77b56cf1-82c8-484d-bc2a-9f0bc6ec5932.png)
 
 ```
-部署ddos节点端，输入a（A）进行安装/Deploy the DDoS node and enter a (A) to install.
+Deploy the DDoS node and enter a (A) to install.
 
-输入主控端的webhook的IP地址和端口/Then enter the IP and port of the webhook on the master.
+Then enter the IP and port of the webhook on the master.
 
 For example: 1.1.1.1:9002（The correct port range needs to be entered）
 ```
@@ -45,4 +45,9 @@ Wait for script execution to complete
 ```
 ![image](https://user-images.githubusercontent.com/85656971/172312742-fd354dcd-6e6d-4bf5-916f-90ede1af5e9e.png)
 
+
+```
+Check the status of the container and set it as healthy.
+```
+![image](https://user-images.githubusercontent.com/85656971/172313016-fd736175-0783-45cb-a582-111093565213.png)
 
